@@ -51,16 +51,7 @@ pip install -r requirements.txt
 
 ### Configuración del Entorno
 
-Asegúrate de tener un archivo `.env.test` con las siguientes variables de entorno:
-
-```dotenv
-USERS_API_URL=https://fn-interview-api.azurewebsites.net/users/:phoneNumber
-CSV_FILE_PATH=../Tests/testData/test.csv
-INTERNATIONAL_PRICE_PER_SECOND=0.75
-NATIONAL_PRICE_PER_CALL=2.5
-FRIENDS_CALLS=10
-PYTHONPATH=./src
-```
+Las configuracion se puede personalizar en el archivo .env o .env.test segun corresponda
 
 ### Ejecutar la Aplicación
 
@@ -80,64 +71,21 @@ pytest
 
 ### Levantar la Aplicación con Docker Compose
 
-Asegúrate de tener Docker y Docker Compose instalados. Luego, crea un archivo `docker-compose.yml` con el siguiente contenido:
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    image: tiangolo/uvicorn-gunicorn-fastapi:python3.8
-    volumes:
-      - .:/app
-    env_file:
-      - .env.test
-    ports:
-      - "8000:80"
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
-```
-
-Para levantar la aplicación con Docker Compose, ejecuta el siguiente comando:
+Asegúrate de tener Docker y Docker Compose instalados. 
+Para levantar la aplicación con Docker Compose, ejecuta los siguientes comandos:
 
 ```bash
-docker-compose up
+$ docker-compose build
+$ docker-compose up
 ```
 
 Esto levantará la aplicación en el puerto 8000.
 
-### Estructura del Proyecto
 
-El proyecto está organizado de la siguiente manera:
+### Ejecución 
+Una vez levantado en docker puede acceder a un `swagger` directamente desde [127.0.0.1:8000/docs]().
 
-- `src/`: Contiene el código fuente de la aplicación.
-  - `main.py`: Archivo principal que define la aplicación FastAPI y los endpoints.
-  - `Config/`: Contiene configuraciones y dependencias. permite por ejemplo determinar cual implementacion CallRegistryBaseConnector se va a utilizar,
-              lo que permitiria cambiar entre distintas conexiones a base de datos o conectore a otros servicios sin afectar la logica de negocio
-  - `Connectors`: Contiene los diferentes conectores a las fuente de datos (BD, Api externa, CSV)
-    - `CallsRegistryBaseConnector/`: Clase Abstracta que define los metodos de consulta y la cual es referenciada desde los servicios que la refieran
-    - `CallsRegistryCSVConnector/`: Implementacion de CallsRegistryBaseConnector para permitir consultar los datos desde un archivo CSV especificado en .env
-  - `Dto/`: Contiene los modelos de datos utilizados en la API.
-  - `Services/`: Contiene la lógica de negocio y servicios de la aplicación.
-    - `CallProcessor/`: Contiene la implementación del patrón de diseño Strategy para el procesamiento de llamadas.
-      - `CallProcessorStrategy`: Define una interfaz común para todas las estrategias de procesamiento de llamadas.
-                                  Contiene métodos abstractos calculate y is_applicable que deben ser implementados por las estrategias concretas.
-      - `NationalCallProcessorStrategy/`,
-      - `InternationalCallProcessorStrategy/`,
-      - `FriendsCallProcessorStrategy/`:implementan la interfaz CallProcessorStrategy.
-                                        Cada clase concreta proporciona su propia implementación de los métodos calculate y is_applicable.
-      - `CallProcessorContext/`: Mantiene una referencia a una lista de objetos CallProcessorStrategy.
-                                  Permite agregar estrategias, establecer información del usuario y procesar llamadas utilizando las estrategias agregadas.
-                                  Proporciona un método get_results para obtener los resultados acumulados de todas las estrategias
-- `Tests/`: Contiene los archivos de prueba para la aplicación.
-- `requirements.txt`: Lista de dependencias del proyecto.
-- `Readme.md`: Documentación del proyecto.
-
-### Flujo del Proyecto
-
-1. El cliente realiza una solicitud POST al endpoint `/get-invoice/` 
-2. FastAPI recibe la solicitud y la pasa al servicio `PhoneInvoiceService` a través de la dependencia `get_service`.
-3. `PhoneInvoiceService` procesa la solicitud, consulta los datos necesarios y calcula la factura del teléfono.
-4. La respuesta se devuelve al cliente con los detalles de la factura.
+O si lo prefiere puede enviar request directamente al servicio desde **CURL**, **POSTMAN** o alguna herramienta similar 
 
 ### Ejemplos de Request y Response
 
@@ -203,3 +151,40 @@ El proyecto está organizado de la siguiente manera:
     }
 }
 ```
+
+
+
+### Estructura del Proyecto
+
+El proyecto está organizado de la siguiente manera:
+
+- `src/`: Contiene el código fuente de la aplicación.
+  - `main.py`: Archivo principal que define la aplicación FastAPI y los endpoints.
+  - `Config/`: Contiene configuraciones y dependencias. permite por ejemplo determinar cual implementacion CallRegistryBaseConnector se va a utilizar,
+              lo que permitiria cambiar entre distintas conexiones a base de datos o conectore a otros servicios sin afectar la logica de negocio
+  - `Connectors`: Contiene los diferentes conectores a las fuente de datos (BD, Api externa, CSV)
+    - `CallsRegistryBaseConnector/`: Clase Abstracta que define los metodos de consulta y la cual es referenciada desde los servicios que la refieran
+    - `CallsRegistryCSVConnector/`: Implementacion de CallsRegistryBaseConnector para permitir consultar los datos desde un archivo CSV especificado en .env
+  - `Dto/`: Contiene los modelos de datos utilizados en la API.
+  - `Services/`: Contiene la lógica de negocio y servicios de la aplicación.
+    - `CallProcessor/`: Contiene la implementación del patrón de diseño Strategy para el procesamiento de llamadas.
+      - `CallProcessorStrategy`: Define una interfaz común para todas las estrategias de procesamiento de llamadas.
+                                  Contiene métodos abstractos calculate y is_applicable que deben ser implementados por las estrategias concretas.
+      - `NationalCallProcessorStrategy/`,
+      - `InternationalCallProcessorStrategy/`,
+      - `FriendsCallProcessorStrategy/`:implementan la interfaz CallProcessorStrategy.
+                                        Cada clase concreta proporciona su propia implementación de los métodos calculate y is_applicable.
+      - `CallProcessorContext/`: Mantiene una referencia a una lista de objetos CallProcessorStrategy.
+                                  Permite agregar estrategias, establecer información del usuario y procesar llamadas utilizando las estrategias agregadas.
+                                  Proporciona un método get_results para obtener los resultados acumulados de todas las estrategias
+- `Tests/`: Contiene los archivos de prueba para la aplicación.
+- `requirements.txt`: Lista de dependencias del proyecto.
+- `Readme.md`: Documentación del proyecto.
+
+### Flujo del Proyecto
+
+1. El cliente realiza una solicitud POST al endpoint `/get-invoice/` 
+2. FastAPI recibe la solicitud y la pasa al servicio `PhoneInvoiceService` a través de la dependencia `get_service`.
+3. `PhoneInvoiceService` procesa la solicitud, consulta los datos necesarios y calcula la factura del teléfono.
+4. La respuesta se devuelve al cliente con los detalles de la factura.
+
