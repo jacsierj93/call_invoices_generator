@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  api:
+    image: brubank-test:latest
+    container_name: api-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    volumes:
+      - ./src:/app/src
+    environment:
+      - PYTHONPATH=/app/src

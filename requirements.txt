@@ -1,0 +1,9 @@
+fastapi[standard]
+pydantic-settings
+requests
+pandas
+uvicorn
+pytest
+pytest-dotenv
+httpx
+httpretty
